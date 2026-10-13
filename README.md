@@ -11,6 +11,10 @@
 | MyBatis | spring-boot-starter 4.1.0 | 只允许 infrastructure 层依赖 |
 | springdoc-openapi | 3.1.1 | 访问 `/swagger-ui.html`（端口 8081） |
 | ArchUnit | 1.5.0（test） | 依赖规则在测试期强制执行，违反即构建失败 |
+| Spotless | 2.44.3 | 代码格式化门禁，支持 `mvn spotless:apply` 一键排版 |
+| SpotBugs | 4.8.6.6 | 字节码静态缺陷扫描门禁 |
+| PMD | 3.26.0 | 代码规范与潜在缺陷静态检查门禁 |
+| JaCoCo | 0.8.12 | 单元测试指令与分支覆盖率门禁 |
 | H2 / MySQL | Boot 管理 | 默认 H2（MySQL 模式）开箱即跑 |
 
 ## 快速开始
@@ -112,12 +116,14 @@ api ──> application ──> domain <──(依赖倒置)── infrastructur
 5. `api/`：DTO（英文校验 message）+ 装配器 + Controller。
 6. 跑 `ArchitectureTest` 确认依赖方向没被破坏；补聚合单测 + 全链路集成测试。
 
-## 测试
+## 测试与质量门禁
 
-```
-mvn test -DskipTests=false
+```bash
+mvn clean verify -DskipTests=false  # 全量验证：测试 + Spotless + PMD + SpotBugs + JaCoCo + ArchUnit
+mvn spotless:apply                  # 格式化代码（若 Spotless 校验不通过可一键修复）
 ```
 
 - `MoneyTest` / `OrderTest` / `OrderPricingServiceTest`：纯领域单测，不启 Spring，毫秒级。
-- `ArchitectureTest`：分层方向、domain 零框架依赖、聚合切片无循环依赖。
+- `ArchitectureTest`：ArchUnit 守护分层方向（api -> application -> domain <- infra）、domain 零框架依赖、聚合切片无环。
 - `OrderFlowTest`：HTTP 全链路（H2 + 演示网关），覆盖创建/支付/取消/异常分支/分页。
+- `Spotless` / `PMD` / `SpotBugs` / `JaCoCo`：在 `verify` 阶段自动化执行质量门禁，未达标直接阻断构建。
