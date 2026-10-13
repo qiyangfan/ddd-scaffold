@@ -1,7 +1,5 @@
 # ddd-scaffold 手搓轻量 DDD 架构脚手架
 
-[![CI](https://github.com/qiyangfan/ddd-scaffold/actions/workflows/ci.yml/badge.svg)](https://github.com/qiyangfan/ddd-scaffold/actions/workflows/ci.yml)
-
 公司架构规范里唯一推荐的轻量 DDD 方案：**不引入任何 DDD 专用框架依赖**（COLA 不纳入选型池），用包分层 + ArchUnit 架构守护测试把"依赖规则（硬性约束）"落到 CI。核心业务域、规则持续迭代的业务用这套；简单 CRUD 用 [mvc-scaffold](../mvc-scaffold)。
 
 ## 技术栈（2026-09 裁决版本）
