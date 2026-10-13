@@ -1,0 +1,33 @@
+# 默认配置：内置 H2（MySQL 兼容模式），开箱即跑，无需任何外部依赖
+spring:
+  application:
+    name: ddd-scaffold
+  datasource:
+    url: jdbc:h2:mem:ddd_scaffold;MODE=MySQL;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  sql:
+    init:
+      # 内嵌库启动时自动执行 classpath:schema.sql
+      mode: embedded
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    com.example.biz.infrastructure.repository: debug
+
+server:
+  port: 8081
