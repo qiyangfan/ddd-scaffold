@@ -1,12 +1,15 @@
 # ddd-scaffold 手搓轻量 DDD 架构脚手架
 
+[![CI](https://github.com/qiyangfan/ddd-scaffold/actions/workflows/ci.yml/badge.svg)](https://github.com/qiyangfan/ddd-scaffold/actions/workflows/ci.yml)
+
 公司架构规范里唯一推荐的轻量 DDD 方案：**不引入任何 DDD 专用框架依赖**（COLA 不纳入选型池），用包分层 + ArchUnit 架构守护测试把"依赖规则（硬性约束）"落到 CI。核心业务域、规则持续迭代的业务用这套；简单 CRUD 用 [mvc-scaffold](../mvc-scaffold)。
 
 ## 技术栈（2026-09 裁决版本）
 
 | 组件 | 版本 | 说明 |
 |------|------|------|
-| JDK | 17（LTS） | Boot 4 基线，可平滑升 21/25 |
+| JDK | 21（LTS） | 现代微服务黄金基线（虚拟线程/模式匹配），CI 矩阵覆盖 21/25 |
+| Node.js | 24 | CI 与前端/契约工具链对齐版本 |
 | Spring Boot | 4.1.1 | 3.5 线已于 2026-06-30 OSS 停更，新项目不再钉死 |
 | MyBatis | spring-boot-starter 4.1.0 | 只允许 infrastructure 层依赖 |
 | springdoc-openapi | 3.1.1 | 访问 `/swagger-ui.html`（端口 8081） |

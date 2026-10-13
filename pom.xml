@@ -18,7 +18,7 @@
     <description>手搓轻量 DDD 架构脚手架：api - application - domain - infrastructure</description>
 
     <properties>
-        <java.version>17</java.version>
+        <java.version>21</java.version>
         <mybatis-starter.version>4.1.0</mybatis-starter.version>
         <springdoc.version>3.1.1</springdoc.version>
         <archunit.version>1.5.0</archunit.version>
