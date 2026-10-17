@@ -33,19 +33,20 @@
         <result column="line_amount" property="lineAmount"/>
     </resultMap>
 
-    <insert id="insertOrder" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
-        INSERT INTO t_order (order_no, user_id, total_amount, discount_amount, pay_amount,
+    <!-- 主键由应用侧生成，不再 useGeneratedKeys 回填自增值 -->
+    <insert id="insertOrder">
+        INSERT INTO t_order (id, order_no, user_id, total_amount, discount_amount, pay_amount,
                              status, remark, gmt_create, gmt_modified)
-        VALUES (#{orderNo}, #{userId}, #{totalAmount}, #{discountAmount}, #{payAmount},
+        VALUES (#{id}, #{orderNo}, #{userId}, #{totalAmount}, #{discountAmount}, #{payAmount},
                 #{status}, #{remark}, #{gmtCreate}, #{gmtModified})
     </insert>
 
     <insert id="insertItems">
-        INSERT INTO t_order_item (order_id, product_id, product_name, unit_price, quantity, line_amount,
+        INSERT INTO t_order_item (id, order_id, product_id, product_name, unit_price, quantity, line_amount,
                                   gmt_create, gmt_modified)
         VALUES
         <foreach collection="items" item="item" separator=",">
-            (#{item.orderId}, #{item.productId}, #{item.productName}, #{item.unitPrice},
+            (#{item.id}, #{item.orderId}, #{item.productId}, #{item.productName}, #{item.unitPrice},
              #{item.quantity}, #{item.lineAmount}, #{item.gmtCreate}, #{item.gmtModified})
         </foreach>
     </insert>
@@ -85,6 +86,7 @@
           AND status = #{fromStatus}
     </update>
 
+    <!-- UUID v7 字典序≈时间序，排序仍以创建时间为主键，避免依赖 ID 文本序 -->
     <select id="selectPage" resultMap="orderResultMap">
         SELECT
         <include refid="orderColumns"/>
@@ -97,7 +99,7 @@
                 AND status = #{status}
             </if>
         </where>
-        ORDER BY id DESC
+        ORDER BY gmt_create DESC, id DESC
         LIMIT #{offset}, #{size}
     </select>
 

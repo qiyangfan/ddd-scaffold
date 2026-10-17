@@ -11,7 +11,7 @@ import java.util.Optional;
  */
 public interface OrderRepository {
 
-    /** 新增订单（含明细），数据库自增主键回填到聚合 */
+    /** 新增订单（含明细）。主键由领域层生成，仓储不做任何回填 */
     void save(Order order);
 
     /**
@@ -21,15 +21,15 @@ public interface OrderRepository {
     boolean updateStatus(Order order, OrderStatus expectStatus);
 
     /** 按主键加载订单聚合（含明细），不存在返回 empty */
-    Optional<Order> find(Long id);
+    Optional<Order> find(String id);
 
-    /** 条件分页查询订单聚合（含明细），按 ID 倒序 */
+    /** 条件分页查询订单聚合（含明细），按创建时间倒序 */
     List<Order> page(OrderQuery query);
 
     /** 条件计数 */
     long count(OrderQuery query);
 
     /** 订单查询条件（领域层查询对象） */
-    record OrderQuery(Long userId, Integer status, Integer pageNo, Integer pageSize) {
+    record OrderQuery(Long userId, OrderStatus status, Integer pageNo, Integer pageSize) {
     }
 }

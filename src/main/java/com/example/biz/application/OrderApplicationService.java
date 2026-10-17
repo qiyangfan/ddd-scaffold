@@ -78,7 +78,7 @@ public class OrderApplicationService {
 
     /** 用例：支付订单（DB 层状态 CAS 兜底并发，冲突转为业务码提示重试） */
     @Transactional(rollbackFor = Exception.class)
-    public Order payOrder(Long orderId) {
+    public Order payOrder(String orderId) {
         Order order = requireOrder(orderId);
         OrderStatus expectStatus = order.getStatus();
         order.pay();
@@ -91,7 +91,7 @@ public class OrderApplicationService {
 
     /** 用例：取消订单（DB 层状态 CAS 兜底并发，冲突转为业务码提示重试） */
     @Transactional(rollbackFor = Exception.class)
-    public Order cancelOrder(Long orderId) {
+    public Order cancelOrder(String orderId) {
         Order order = requireOrder(orderId);
         OrderStatus expectStatus = order.getStatus();
         order.cancel();
@@ -102,7 +102,7 @@ public class OrderApplicationService {
     }
 
     /** 用例：查询订单详情 */
-    public Order getOrder(Long orderId) {
+    public Order getOrder(String orderId) {
         return requireOrder(orderId);
     }
 
@@ -122,7 +122,7 @@ public class OrderApplicationService {
         }
     }
 
-    private Order requireOrder(Long orderId) {
+    private Order requireOrder(String orderId) {
         return orderRepository.find(orderId)
                 .orElseThrow(() -> new DomainException(DomainErrorCode.ORDER_NOT_FOUND));
     }

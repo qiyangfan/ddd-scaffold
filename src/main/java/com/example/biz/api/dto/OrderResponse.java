@@ -13,8 +13,8 @@ import java.util.List;
 @Schema(description = "订单详情")
 public record OrderResponse(
 
-        @Schema(description = "订单 ID", example = "1")
-        Long id,
+        @Schema(description = "订单 ID：UUID v7 字符串", example = "019b1f2c-7a3e-7c4b-8f1d-2e6a9b0c1d2e")
+        String id,
 
         @Schema(description = "订单号", example = "SO202609211200001234")
         String orderNo,

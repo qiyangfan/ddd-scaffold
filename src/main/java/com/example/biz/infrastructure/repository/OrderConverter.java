@@ -2,6 +2,7 @@ package com.example.biz.infrastructure.repository;
 
 import com.example.biz.domain.aggregate.Order;
 import com.example.biz.domain.entity.OrderItem;
+import com.example.biz.domain.support.Ids;
 import com.example.biz.domain.valueobject.Money;
 import com.example.biz.domain.valueobject.OrderStatus;
 
@@ -9,6 +10,7 @@ import java.util.List;
 
 /**
  * 订单持久化转换器：聚合 &lt;-&gt; DO 的唯一转换点，显式映射禁止反射拷贝。
+ * <p>主键与明细主键均由 {@link Ids} 生成（应用侧身份），转换器不再依赖数据库自增回填。</p>
  */
 public final class OrderConverter {
 
@@ -36,6 +38,7 @@ public final class OrderConverter {
         return order.getItems().stream()
                 .map(item -> {
                     OrderItemDO itemDO = new OrderItemDO();
+                    itemDO.setId(Ids.newId());
                     itemDO.setOrderId(order.getId());
                     itemDO.setProductId(item.productId());
                     itemDO.setProductName(item.productName());

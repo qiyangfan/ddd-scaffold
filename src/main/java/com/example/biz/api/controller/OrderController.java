@@ -13,7 +13,6 @@ import com.example.biz.domain.aggregate.Order;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.validation.annotation.Validated;
@@ -25,9 +24,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * 订单接口：只做参数校验、入参转换与返回体组装，禁止业务逻辑。
+ * <p>路径上的主键用 {@link UUID} 声明：格式非法的 ID 在进入领域层之前就被转成 400，
+ * 而不是带着任意字符串去查库（fail-closed，畸形入参不进业务链路）。</p>
  */
 @Tag(name = "订单管理")
 @Validated
@@ -51,20 +53,20 @@ public class OrderController {
 
     @Operation(summary = "支付订单")
     @PostMapping("/{id}/pay")
-    public R<OrderResponse> pay(@PathVariable("id") @Min(value = 1, message = "id must be greater than or equal to 1") Long id) {
-        return R.ok(orderAssembler.toResponse(orderApplicationService.payOrder(id)));
+    public R<OrderResponse> pay(@PathVariable("id") UUID id) {
+        return R.ok(orderAssembler.toResponse(orderApplicationService.payOrder(id.toString())));
     }
 
     @Operation(summary = "取消订单")
     @PostMapping("/{id}/cancel")
-    public R<OrderResponse> cancel(@PathVariable("id") @Min(value = 1, message = "id must be greater than or equal to 1") Long id) {
-        return R.ok(orderAssembler.toResponse(orderApplicationService.cancelOrder(id)));
+    public R<OrderResponse> cancel(@PathVariable("id") UUID id) {
+        return R.ok(orderAssembler.toResponse(orderApplicationService.cancelOrder(id.toString())));
     }
 
     @Operation(summary = "订单详情")
     @GetMapping("/{id}")
-    public R<OrderResponse> get(@PathVariable("id") @Min(value = 1, message = "id must be greater than or equal to 1") Long id) {
-        return R.ok(orderAssembler.toResponse(orderApplicationService.getOrder(id)));
+    public R<OrderResponse> get(@PathVariable("id") UUID id) {
+        return R.ok(orderAssembler.toResponse(orderApplicationService.getOrder(id.toString())));
     }
 
     @Operation(summary = "分页查询订单")

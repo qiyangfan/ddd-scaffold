@@ -7,12 +7,13 @@ import java.time.LocalDateTime;
 
 /**
  * 订单 DO：与 t_order 表结构一一对应，仅存在于 infrastructure 层。
+ * <p>主键为 UUID v7 字符串（应用侧生成，不使用数据库自增），状态为编码字符串（见 ADR-0006 / ADR-0007）。</p>
  */
 @Data
 public class OrderDO {
 
-    /** 主键 */
-    private Long id;
+    /** 主键：UUID v7 字符串 */
+    private String id;
     /** 订单号 */
     private String orderNo;
     /** 用户 ID */
@@ -23,8 +24,8 @@ public class OrderDO {
     private BigDecimal discountAmount;
     /** 应付金额 */
     private BigDecimal payAmount;
-    /** 状态：0 待支付 1 已支付 2 已取消 */
-    private Integer status;
+    /** 状态编码：UNPAID / PAID / CANCELLED，库表 CHECK 约束同一份清单 */
+    private String status;
     /** 备注 */
     private String remark;
     /** 创建时间 */

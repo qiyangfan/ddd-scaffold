@@ -4,6 +4,7 @@ import com.example.biz.domain.entity.OrderItem;
 import com.example.biz.domain.exception.DomainErrorCode;
 import com.example.biz.domain.exception.DomainException;
 import com.example.biz.domain.service.OrderPricingService;
+import com.example.biz.domain.support.Ids;
 import com.example.biz.domain.valueobject.Money;
 import com.example.biz.domain.valueobject.OrderStatus;
 
@@ -13,10 +14,12 @@ import java.util.List;
 /**
  * 订单聚合根：一致性与状态机的边界，全部业务规则内聚在此，禁止外部直接改状态字段。
  * <p>状态机：UNPAID -&gt; PAID（支付）/ UNPAID -&gt; CANCELLED（取消），终态不可逆。</p>
+ * <p>主键为 UUID v7 字符串，由 {@link Ids} 在工厂方法内生成——聚合创建即拥有身份，
+ * 仓储只负责持久化，不再回填主键（见 ADR-0006）。</p>
  */
 public final class Order {
 
-    private Long id;
+    private final String id;
     private final String orderNo;
     private final Long userId;
     private OrderStatus status;
@@ -28,7 +31,7 @@ public final class Order {
     private final LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
-    private Order(Long id, String orderNo, Long userId, OrderStatus status, Money totalAmount,
+    private Order(String id, String orderNo, Long userId, OrderStatus status, Money totalAmount,
                   Money discountAmount, Money payAmount, String remark, List<OrderItem> items,
                   LocalDateTime createdAt, LocalDateTime updatedAt) {
         this.id = id;
@@ -45,7 +48,7 @@ public final class Order {
     }
 
     /**
-     * 创建订单：领域工厂方法，入参为领域服务产出的定价结果，创建时即完成全部不变量校验。
+     * 创建订单：领域工厂方法，入参为领域服务产出的定价结果，创建时即完成全部不变量校验并生成身份。
      */
     public static Order create(String orderNo, Long userId, OrderPricingService.PricingResult pricing, String remark) {
         if (orderNo == null || orderNo.isBlank() || userId == null || pricing == null) {
@@ -58,17 +61,18 @@ public final class Order {
             throw new DomainException(DomainErrorCode.ORDER_AMOUNT_ILLEGAL);
         }
         LocalDateTime now = LocalDateTime.now();
-        return new Order(null, orderNo, userId, OrderStatus.UNPAID, pricing.totalAmount(),
+        return new Order(Ids.newId(), orderNo, userId, OrderStatus.UNPAID, pricing.totalAmount(),
                 pricing.discountAmount(), pricing.payAmount(), remark, pricing.items(), now, now);
     }
 
     /**
-     * 仅供仓储实现重建聚合，业务代码禁止调用。
+     * 仅供仓储实现从持久化数据重建聚合，业务代码禁止调用。
      */
-    public static Order restore(Long id, String orderNo, Long userId, OrderStatus status, Money totalAmount,
+    public static Order restore(String id, String orderNo, Long userId, OrderStatus status, Money totalAmount,
                                 Money discountAmount, Money payAmount, String remark, List<OrderItem> items,
                                 LocalDateTime createdAt, LocalDateTime updatedAt) {
-        return new Order(id, orderNo, userId, status, totalAmount, discountAmount, payAmount, remark, items, createdAt, updatedAt);
+        return new Order(id, orderNo, userId, status, totalAmount, discountAmount, payAmount, remark, items,
+                createdAt, updatedAt);
     }
 
     /** 支付：仅待支付订单可支付 */
@@ -85,13 +89,6 @@ public final class Order {
         this.updatedAt = LocalDateTime.now();
     }
 
-    /**
-     * 仅供仓储实现在插入后回填数据库自增主键，业务代码禁止调用。
-     */
-    public void attachId(Long id) {
-        this.id = id;
-    }
-
     private void ensureUnpaid(String message) {
         if (this.status != OrderStatus.UNPAID) {
             throw new DomainException(DomainErrorCode.ORDER_STATUS_ILLEGAL,
@@ -99,7 +96,7 @@ public final class Order {
         }
     }
 
-    public Long getId() {
+    public String getId() {
         return id;
     }
 

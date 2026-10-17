@@ -71,12 +71,13 @@ class OrderFlowTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value("B0204"));
 
-        // 5. 分页可查到该订单（ID/total 因 Long 序列化为字符串）
+        // 5. 分页可查到该订单（total 因 Long 序列化为字符串；主键本身已是 UUID v7 字符串）
         mockMvc.perform(get("/api/v1/orders").param("pageNo", "1").param("pageSize", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value("0"))
                 .andExpect(jsonPath("$.data.total").value("1"))
-                .andExpect(jsonPath("$.data.list[0].orderNo").isNotEmpty());
+                .andExpect(jsonPath("$.data.list[0].orderNo").isNotEmpty())
+                .andExpect(jsonPath("$.data.list[0].id").isNotEmpty());
     }
 
     @Test
@@ -137,8 +138,36 @@ class OrderFlowTest {
 
     @Test
     void missingOrderShouldReturnNotFound() throws Exception {
-        mockMvc.perform(get("/api/v1/orders/{id}", 99999))
+        mockMvc.perform(get("/api/v1/orders/{id}", "019b1f2c-7a3e-7c4b-8f1d-2e6a9b0c1d2e"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value("B0201"));
+    }
+
+    /** 畸形主键：在进入领域层之前就被转成 400，不带着任意字符串去查库 */
+    @Test
+    void malformedOrderIdShouldBeRejected() throws Exception {
+        mockMvc.perform(get("/api/v1/orders/{id}", "not-a-uuid"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("A0400"));
+    }
+
+    /**
+     * 畸形状态枚举：同样 fail-closed，脏过滤值不进 Service、更不下沉到 SQL。
+     * 用小写 paid 而非乱码：同时钉住"大小写不宽容"——脏库里可能出现 paid，
+     * 它必须被拒，而不是被静默归一成 PAID。
+     */
+    @Test
+    void illegalStatusFilterShouldBeRejected() throws Exception {
+        mockMvc.perform(get("/api/v1/orders").param("status", "paid"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("A0400"));
+    }
+
+    /** 分页超限：上限值由领域侧 PageLimits 单一来源强校验 */
+    @Test
+    void oversizePageShouldBeRejected() throws Exception {
+        mockMvc.perform(get("/api/v1/orders").param("pageSize", "201"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("A0400"));
     }
 }
