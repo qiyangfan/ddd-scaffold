@@ -9,6 +9,8 @@ import java.util.Objects;
  * <p> record 自动按字段生成 equals/hashCode，满足"覆写 equals 必须覆写 hashCode"契约。
  * 单币种模型；多币种场景在此扩展 currency 字段与换算规则。</p>
  */
+// record 隐式生成 equals/hashCode（紧凑构造器已归一化 scale，与 compareTo 语义一致）；规则无法识别隐式成员，显式豁免
+@SuppressWarnings("PMD.OverrideBothEqualsAndHashCodeOnComparable")
 public record Money(BigDecimal amount) implements Comparable<Money> {
 
     public Money {

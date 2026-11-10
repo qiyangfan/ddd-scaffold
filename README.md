@@ -4,33 +4,33 @@
 用包分层 + ArchUnit 架构守护测试把"依赖规则（硬性约束）"落到 CI。核心业务域、规则持续迭代的业务用这套；
 简单 CRUD 用 [mvc-scaffold](../mvc-scaffold)。
 
-## 技术栈（2026-10 裁决版本）
+## 技术栈（2026-11 裁决版本）
 
 | 组件 | 版本 | 说明 |
 | ------ | ------ | ------ |
 | JDK | **25（LTS）** | 当前唯一新 LTS，源码/字节码/运行时单一基线；门禁工具链须支持 Java 25 class file（ADR-0008） |
 | Node.js | 24 | CI 与前端/契约工具链对齐版本 |
-| Spring Boot | 4.1.1 | 3.5 线已于 2026-06-30 OSS 停更，新项目不再钉死 |
+| Spring Boot | 4.1.2 | 3.5 线已于 2026-06-30 OSS 停更，新项目不再钉死 |
 | Flyway | Boot 管理（flyway-core 12.x） | 单一 baseline，schema 只走迁移；Boot 4 需显式引 `spring-boot-flyway`（ADR-0007） |
 | MyBatis | spring-boot-starter 4.1.0 | 只允许 infrastructure 层依赖 |
-| springdoc-openapi | 3.1.1 | 访问 `/swagger-ui.html`（端口 8081）；契约导出见 ADR-0009 |
+| springdoc-openapi | 3.2.0 | 访问 `/swagger-ui.html`（端口 8081）；契约导出见 ADR-0009 |
 | ArchUnit | 1.5.1（test） | 依赖规则在测试期强制执行，违反即构建失败 |
 | Spotless | 3.10.4 | 代码格式化门禁，支持 `mvn spotless:apply` 一键排版 |
 | SpotBugs | 4.10.5.0 | 字节码静态缺陷扫描门禁 |
 | PMD | 3.28.0（内置 PMD 7） | 代码规范与潜在缺陷静态检查门禁 |
-| JaCoCo | 0.8.15 | 覆盖率门禁；0.8.14 起才支持 Java 25 |
+| JaCoCo | 0.8.16 | 覆盖率门禁；0.8.14 起才支持 Java 25 |
 | H2 / MySQL | Boot 管理 | 默认 H2（MySQL 模式）开箱即跑，同一套 Flyway 脚本 |
 
 ## 快速开始
 
 ```bash
-mvn test -DskipTests=false          # 全量测试（含架构守护测试）
-mvn spring-boot:run                 # 默认 H2 内置库，Flyway 自动建表
+./mvnw test -DskipTests=false       # 全量测试（含架构守护测试）
+./mvnw spring-boot:run              # 默认 H2 内置库，Flyway 自动建表
 # 生产/联调：切 MySQL profile，启动时 Flyway 自动执行迁移，无需人工先跑 SQL
-mvn spring-boot:run -Dspring-boot.run.profiles=mysql
+./mvnw spring-boot:run -Dspring-boot.run.profiles=mysql
 
 # 导出 API 契约（提交前必跑，CI 会做漂移门禁）
-mvn clean verify -DskipTests=false -Dcontract.export=true
+./mvnw clean verify -DskipTests=false -Dcontract.export=true
 ```
 
 ## 包结构（固定，直接落地）

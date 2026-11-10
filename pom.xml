@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>4.1.1</version>
+        <version>4.1.2</version>
         <relativePath/>
     </parent>
 
@@ -21,9 +21,11 @@
         <!-- JDK 25 为当前唯一新 LTS：源码/字节码/运行时单一基线。
              门禁工具链必须支持 Java 25 class file：JaCoCo 0.8.14 起才官方支持，低于该版本覆盖率统计直接失真 -->
         <java.version>25</java.version>
+        <!-- JDK 23+ javac 默认不再从 classpath 隐式发现注解处理器，Lombok 需显式开启 -->
+        <maven.compiler.proc>full</maven.compiler.proc>
         <mybatis-starter.version>4.1.0</mybatis-starter.version>
-        <springdoc.version>3.1.1</springdoc.version>
-        <jacoco.version>0.8.15</jacoco.version>
+        <springdoc.version>3.2.0</springdoc.version>
+        <jacoco.version>0.8.16</jacoco.version>
         <archunit.version>1.5.1</archunit.version>
         <spotbugs.version>4.10.5.0</spotbugs.version>
         <pmd.version>3.28.0</pmd.version>
