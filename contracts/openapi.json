@@ -78,22 +78,22 @@
               }
             }
           },
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/RPageResultOrderResponse"
-                }
-              }
-            }
-          },
           "500" : {
             "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/RVoid"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RPageResultOrderResponse"
                 }
               }
             }
@@ -125,22 +125,22 @@
               }
             }
           },
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ROrderResponse"
-                }
-              }
-            }
-          },
           "500" : {
             "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/RVoid"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ROrderResponse"
                 }
               }
             }
@@ -173,22 +173,22 @@
               }
             }
           },
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ROrderResponse"
-                }
-              }
-            }
-          },
           "500" : {
             "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/RVoid"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ROrderResponse"
                 }
               }
             }
@@ -221,22 +221,22 @@
               }
             }
           },
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ROrderResponse"
-                }
-              }
-            }
-          },
           "500" : {
             "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/RVoid"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ROrderResponse"
                 }
               }
             }
@@ -269,22 +269,22 @@
               }
             }
           },
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ROrderResponse"
-                }
-              }
-            }
-          },
           "500" : {
             "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/RVoid"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ROrderResponse"
                 }
               }
             }

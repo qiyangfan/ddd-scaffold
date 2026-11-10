@@ -6,11 +6,8 @@ import java.util.Objects;
 
 /**
  * 金额值对象：不可变、统一保留 2 位小数（HALF_UP），相等性基于归一化后的值。
- * <p> record 自动按字段生成 equals/hashCode，满足"覆写 equals 必须覆写 hashCode"契约。
- * 单币种模型；多币种场景在此扩展 currency 字段与换算规则。</p>
+ * 单币种模型；多币种场景在此扩展 currency 字段与换算规则。
  */
-// record 隐式生成 equals/hashCode（紧凑构造器已归一化 scale，与 compareTo 语义一致）；规则无法识别隐式成员，显式豁免
-@SuppressWarnings("PMD.OverrideBothEqualsAndHashCodeOnComparable")
 public record Money(BigDecimal amount) implements Comparable<Money> {
 
     public Money {
