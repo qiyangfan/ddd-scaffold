@@ -5,6 +5,7 @@ import com.example.biz.application.command.OrderPageQuery;
 import com.example.biz.domain.aggregate.Order;
 import com.example.biz.domain.exception.DomainErrorCode;
 import com.example.biz.domain.exception.DomainException;
+import com.example.biz.domain.gateway.IdGenerator;
 import com.example.biz.domain.gateway.ProductGateway;
 import com.example.biz.domain.repository.OrderRepository;
 import com.example.biz.domain.service.OrderPricingService;
@@ -21,12 +22,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * 订单应用服务：一个方法对应一个业务用例。负责事务、用例编排、领域事件发布，不写业务规则。
@@ -37,12 +35,12 @@ import java.util.concurrent.ThreadLocalRandom;
 @RequiredArgsConstructor
 public class OrderApplicationService {
 
-    private static final DateTimeFormatter ORDER_NO_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+    /** 业务单号前缀，属于订单格式语义；唯一性由 {@link IdGenerator} 端口提供 */
     private static final String ORDER_NO_PREFIX = "SO";
-    private static final int ORDER_NO_RANDOM_BOUND = 10000;
 
     private final OrderRepository orderRepository;
     private final ProductGateway productGateway;
+    private final IdGenerator idGenerator;
     private final OrderPricingService orderPricingService;
     private final ApplicationEventPublisher eventPublisher;
 
@@ -131,9 +129,8 @@ public class OrderApplicationService {
         eventPublisher.publishEvent(event);
     }
 
-    /** 订单号生成：SO + 时间戳 + 4 位随机段；生产环境建议替换为雪花 ID 或号段模式（多实例唯一） */
+    /** 订单号 = 业务前缀 + 唯一 ID；唯一性机制见 {@link IdGenerator} 实现，切换雪花/号段无需改用例 */
     private String nextOrderNo() {
-        return ORDER_NO_PREFIX + LocalDateTime.now().format(ORDER_NO_FORMATTER)
-                + String.format("%04d", ThreadLocalRandom.current().nextInt(ORDER_NO_RANDOM_BOUND));
+        return ORDER_NO_PREFIX + idGenerator.nextId();
     }
 }

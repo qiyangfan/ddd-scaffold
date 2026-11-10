@@ -16,6 +16,10 @@
    - `domain`：核心业务逻辑内核，包含聚合根、实体、值对象、领域服务。允许被外层只读访问（读状态/组装视图），但**绝不反向依赖任何层**。
    - `infrastructure`：实现 domain 定义的 Repository 与 Gateway 端口，技术细节下沉。
      **禁止任何业务层直接触碰 infrastructure 内部类**（仅通过 Spring 依赖注入接口）。
+   - **驱动入口演进条款**：仅当出现 HTTP 之外的驱动入口（MQ 消费者、定时任务、RPC Provider 等）时，
+     才新建 `trigger` 层（`com.example.biz.trigger`）承载：只做消息解析与转调 application 用例，
+     禁止旁路 application 直调 domain；同时修改 `ArchitectureTest.layerDependencyRule`——
+     `Application` 层允许被 `Api`、`Trigger` 访问，`Trigger` 层不得被任何层访问。无该类入口时不得预建此层。
    - **门禁执行**：`ArchitectureTest` 在编译与测试期通过 ArchUnit 强制断言，违背依赖方向直接构建失败。
 
 2. **领域层纯洁性铁律（Domain Framework-Free）**
@@ -41,7 +45,10 @@
    - 进程保持无状态：禁止使用 JVM 内存保存分布式共享状态，禁止静态可变变量。
    - 进程内领域事件（`@TransactionalEventListener(AFTER_COMMIT)`）仅适用于单实例事务解耦；多实例或跨服务协作时，
      必须在基础设施层监听器处替换为 MQ 消息投递。
-   - 订单号/流水号生成当前为开箱演示逻辑，生产多实例部署必须替换为雪花算法（Snowflake）或分布式号段服务。
+   - 订单号/流水号生成的唯一性机制已收敛至 `domain/gateway/IdGenerator` 端口
+     （演示实现 `infrastructure/gateway/DemoIdGenerator`：时间戳 + 4 位随机段，多实例并发有碰撞风险）；
+     生产部署须用雪花算法或号段服务实现**替换**演示实现（新增实现 Bean 并移除 `DemoIdGenerator` 的 `@Component`，
+     否则容器存在两个 `IdGenerator` Bean 启动失败），用例代码不动，业务前缀等格式语义留在用例层。
 
 6. **质量门禁 100% 全绿铁律**
    - 任何改动提交前，
