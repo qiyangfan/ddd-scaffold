@@ -105,6 +105,8 @@ api ──> application ──> domain <──(依赖倒置)── infrastructur
 
 - **领域服务无 Spring 化**：`OrderPricingService` 是纯类，
   由 `infrastructure/config/DomainConfig` 声明为 Bean——domain 保持零依赖，装配权在基础设施层。
+- **业务时间注入**：聚合与用例取注入 `Clock`，ArchUnit 禁 domain/application 直呼墙钟，
+  测试用固定时钟确定性验证时间语义（`Ids` 身份生成为唯一豁免）。
 - **主键 UUID v7 应用侧生成**：聚合在工厂方法里就拥有身份，
   仓储只持久化不回填——`attachId()` 这类"仅供仓储调用"的封装破洞已删除（ADR-0006）。
 - **状态变更双层防重**：聚合状态机挡住串行非法迁移；
@@ -141,7 +143,7 @@ api ──> application ──> domain <──(依赖倒置)── infrastructur
 3. `infrastructure/`：Mapper + DO + Converter 实现仓储；gateway 实现外部端口（显式超时 + 异常翻译）。
 4. `application/`：一个用例一个方法，`@Transactional(rollbackFor = Exception.class)`，发布事件。
 5. `api/`：DTO（英文校验 message）+ 装配器 + Controller；主键路径变量用 `UUID` 声明，枚举过滤直接绑领域枚举。
-6. `db/migration/V{n}__{描述}.sql` 新增结构变更（禁改已发布迁移）。
+6. `db/migration/VyyyyMMddHHmmss__{描述}.sql` 新增结构变更（时间戳版本号免撞号，禁改已发布迁移）。
 7. 跑 `ArchitectureTest` 确认依赖方向没被破坏；补聚合单测 + 全链路集成测试。
 8.
    `mvn clean verify -DskipTests=false -Dcontract.export=true` 并提交

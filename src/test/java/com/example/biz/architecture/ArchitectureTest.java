@@ -1,17 +1,23 @@
 package com.example.biz.architecture;
 
+import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.library.dependencies.SlicesRuleDefinition;
+
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
 
 /**
  * 架构守护测试：规范里的"依赖规则（硬性约束）"在 CI 强制执行，违反即构建失败。
+ * <p>执法射程为生产代码：测试代码允许合法跨层装配与读取墙钟（如校验 UUID v7 时间戳）。</p>
  */
-@AnalyzeClasses(packages = "com.example.biz")
+@AnalyzeClasses(packages = "com.example.biz", importOptions = ImportOption.DoNotIncludeTests.class)
 class ArchitectureTest {
 
     /**
@@ -51,4 +57,19 @@ class ArchitectureTest {
     @ArchTest
     static final ArchRule domainSlicesShouldBeFreeOfCycles =
             SlicesRuleDefinition.slices().matching("com.example.biz.(*)..").should().beFreeOfCycles();
+
+    /**
+     * 业务时间必须取注入 Clock：domain 与 application 禁止直呼墙钟，
+     * 保证时间语义可确定性测试与重放（超时/过期/事件时间戳）。
+     * <p>豁免 {@code Ids}：UUID v7 身份生成需要真实单调时间戳，属身份时间而非业务时间。</p>
+     */
+    @ArchTest
+    static final ArchRule businessTimeMustComeFromInjectedClock = noClasses()
+            .that().resideInAnyPackage("..biz.domain..", "..biz.application..")
+            .and().doNotHaveSimpleName("Ids")
+            .should().callMethod(LocalDateTime.class, "now")
+            .orShould().callMethod(LocalDate.class, "now")
+            .orShould().callMethod(Instant.class, "now")
+            .orShould().callMethod(System.class, "currentTimeMillis")
+            .because("业务时间必须取注入 Clock，禁止直呼墙钟");
 }

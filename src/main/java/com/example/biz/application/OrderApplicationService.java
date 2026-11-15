@@ -21,6 +21,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
@@ -43,6 +44,7 @@ public class OrderApplicationService {
     private final IdGenerator idGenerator;
     private final OrderPricingService orderPricingService;
     private final ApplicationEventPublisher eventPublisher;
+    private final Clock clock;
 
     /**
      * 用例：创建订单。
@@ -64,11 +66,11 @@ public class OrderApplicationService {
                 .toList();
         OrderPricingService.PricingResult pricing = orderPricingService.price(drafts, productMap);
 
-        Order order = Order.create(nextOrderNo(), command.userId(), pricing, command.remark());
+        Order order = Order.create(nextOrderNo(), command.userId(), pricing, command.remark(), clock);
         orderRepository.save(order);
 
         publish(new OrderCreatedEvent(order.getId(), order.getOrderNo(), order.getUserId(),
-                order.getPayAmount().amount(), Instant.now()));
+                order.getPayAmount().amount(), Instant.now(clock)));
         log.info("order created, orderId:{}, orderNo:{}, payAmount:{}",
                 order.getId(), order.getOrderNo(), order.getPayAmount().amount());
         return order;
@@ -79,10 +81,10 @@ public class OrderApplicationService {
     public Order payOrder(String orderId) {
         Order order = requireOrder(orderId);
         OrderStatus expectStatus = order.getStatus();
-        order.pay();
+        order.pay(clock);
         casUpdate(order, expectStatus);
         publish(new OrderPaidEvent(order.getId(), order.getOrderNo(),
-                order.getPayAmount().amount(), Instant.now()));
+                order.getPayAmount().amount(), Instant.now(clock)));
         log.info("order paid, orderId:{}, orderNo:{}", order.getId(), order.getOrderNo());
         return order;
     }
@@ -92,9 +94,9 @@ public class OrderApplicationService {
     public Order cancelOrder(String orderId) {
         Order order = requireOrder(orderId);
         OrderStatus expectStatus = order.getStatus();
-        order.cancel();
+        order.cancel(clock);
         casUpdate(order, expectStatus);
-        publish(new OrderCancelledEvent(order.getId(), order.getOrderNo(), Instant.now()));
+        publish(new OrderCancelledEvent(order.getId(), order.getOrderNo(), Instant.now(clock)));
         log.info("order cancelled, orderId:{}, orderNo:{}", order.getId(), order.getOrderNo());
         return order;
     }

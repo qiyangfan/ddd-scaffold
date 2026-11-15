@@ -8,6 +8,7 @@ import com.example.biz.domain.support.Ids;
 import com.example.biz.domain.valueobject.Money;
 import com.example.biz.domain.valueobject.OrderStatus;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -16,6 +17,8 @@ import java.util.List;
  * <p>状态机：UNPAID -&gt; PAID（支付）/ UNPAID -&gt; CANCELLED（取消），终态不可逆。</p>
  * <p>主键为 UUID v7 字符串，由 {@link Ids} 在工厂方法内生成——聚合创建即拥有身份，
  * 仓储只负责持久化，不再回填主键（见 ADR-0006）。</p>
+ * <p>业务时间一律取注入的 {@link Clock}（在线=系统时钟，测试=固定时钟），
+ * 禁止直呼墙钟——时间语义可确定性测试与重放。</p>
  */
 public final class Order {
 
@@ -50,8 +53,9 @@ public final class Order {
     /**
      * 创建订单：领域工厂方法，入参为领域服务产出的定价结果，创建时即完成全部不变量校验并生成身份。
      */
-    public static Order create(String orderNo, Long userId, OrderPricingService.PricingResult pricing, String remark) {
-        if (orderNo == null || orderNo.isBlank() || userId == null || pricing == null) {
+    public static Order create(String orderNo, Long userId, OrderPricingService.PricingResult pricing, String remark,
+                               Clock clock) {
+        if (orderNo == null || orderNo.isBlank() || userId == null || pricing == null || clock == null) {
             throw new DomainException(DomainErrorCode.ORDER_CREATE_ARGS_ILLEGAL);
         }
         if (pricing.items().isEmpty()) {
@@ -60,7 +64,7 @@ public final class Order {
         if (pricing.payAmount().isNegative()) {
             throw new DomainException(DomainErrorCode.ORDER_AMOUNT_ILLEGAL);
         }
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock);
         return new Order(Ids.newId(), orderNo, userId, OrderStatus.UNPAID, pricing.totalAmount(),
                 pricing.discountAmount(), pricing.payAmount(), remark, pricing.items(), now, now);
     }
@@ -76,17 +80,17 @@ public final class Order {
     }
 
     /** 支付：仅待支付订单可支付 */
-    public void pay() {
+    public void pay(Clock clock) {
         ensureUnpaid("only unpaid order can be paid");
         this.status = OrderStatus.PAID;
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now(clock);
     }
 
     /** 取消：仅待支付订单可取消，已支付订单走退款流程 */
-    public void cancel() {
+    public void cancel(Clock clock) {
         ensureUnpaid("only unpaid order can be cancelled");
         this.status = OrderStatus.CANCELLED;
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now(clock);
     }
 
     private void ensureUnpaid(String message) {

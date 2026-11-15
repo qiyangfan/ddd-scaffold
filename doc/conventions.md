@@ -34,7 +34,8 @@
   - 严禁新增自增主键，严禁为回填主键给聚合加 setter（`attachId()` 已废弃删除）；
   - MyBatis 插入不使用 `useGeneratedKeys`；DAO 的主键类型为 `String`。
 - **Schema 纪律（ADR-0007）**：
-  - 结构变更只走 `src/main/resources/db/migration/V{n}__{描述}.sql`，**已发布迁移禁止改内容**；
+  - 结构变更只走 Flyway 迁移：baseline 为 `V1__baseline.sql`，新增迁移一律用创建时刻时间戳
+    `VyyyyMMddHHmmss__{描述}.sql`（并行分支天然免撞号），**已发布迁移禁止改内容**；
   - 状态列一律 `VARCHAR + CHECK`，取值清单与领域枚举严格一致；严禁 `SMALLINT/TINYINT` 数字码 + 注释；
   - 时间列统一 `gmt_create / gmt_modified`；已规划能力（有 spec 的）建表时一次到位，不留追补迁移；
   - DDL 保持 H2(MySQL 模式) 与 MySQL 双兼容，不写引擎/字符集/表级 COMMENT 等方言子句。
@@ -59,6 +60,26 @@
   - 严禁捕获异常后吞掉（Empty Catch Block）。
   - 自定义异常必须保留原始根因（`new BizException(code, e)`），禁止断裂调用栈。
 
+### 4. 时间语义（Clock 注入）
+
+- 业务时间一律取注入的 `java.time.Clock`：聚合工厂/状态方法与用例事件时间戳收 `Clock` 参数，
+  生产装配供 `Clock.systemDefaultZone()`（见 `DomainConfig`），测试替换为固定时钟。
+- domain 与 application 层禁止直呼 `LocalDateTime.now()` / `Instant.now()` /
+  `System.currentTimeMillis()`，由 ArchUnit 规则
+  `businessTimeMustComeFromInjectedClock` 执法。
+- 唯一豁免 `domain/support/Ids`：UUID v7 身份生成需要真实单调时间戳，属身份时间而非业务时间。
+- 数据库列 `DEFAULT CURRENT_TIMESTAMP` 仅作兜底；应用写入必须显式给时间值，
+  禁止 DB 时钟与应用时钟混用。
+
+### 5. 外部事实纪律（来源故障 ≠ 确认事实）
+
+- 网关读取外部事实必须区分三种结果：确认命中、确认未命中、不可判定（来源故障）。
+  超时、5xx、空响应体、非成功业务码属不可判定，翻译为第三方错误码，
+  不得伪装成「不存在」「值为零」等确认事实。
+- 降级只允许发生在确认未命中时（如部门确认裁撤，展示字段置空并告警）；
+  来源故障不得静默吞掉，fail 方向由业务显式选择，默认 fail-closed。
+- 演示网关替换为真实 RPC/HTTP 实现时，本纪律是验收项之一。
+
 ---
 
 ## 二、质量门禁准出标准（Quality Gates）
@@ -80,8 +101,8 @@ npx --yes markdownlint-cli2@0.23.3 --config .markdownlint.json "**/*.md"
 | **Spotless (3.10.4)** | 格式化规范 | 严格 4 空格缩进、去除无用 import、尾部换行 | `mvn spotless:apply` 一键自动格式化 |
 | **PMD (3.28.0 / PMD 7.17.0)** | 静态代码分析 | 0 Violation（优先排查并发、潜在空指针、异常丢失） | 查看 `target/pmd.xml` 针对性修复代码 |
 | **SpotBugs (4.10.5.0)** | 字节码缺陷扫描 | 0 Bug（Effort=Max, Threshold=Medium） | 查看 `target/spotbugs.xml` 修复潜在缺陷 |
-| **JaCoCo (0.8.15)** | 单元测试覆盖率 | Instruction ≥ 70%, Branch ≥ 50% | 为未覆盖分支补充针对性单测用例 |
-| **ArchUnit (1.5.1)** | 架构守护测试 | 100% 规则通过（分层单向依赖、domain 零框架依赖、无环） | 检查类所属包及 import 方向，严禁违背 DIP |
+| **JaCoCo (0.8.16)** | 单元测试覆盖率 | Instruction ≥ 70%, Branch ≥ 50% | 为未覆盖分支补充针对性单测用例 |
+| **ArchUnit (1.5.1)** | 架构守护测试 | 100% 规则通过（分层单向依赖、domain 零框架依赖、无环、业务墙钟禁令） | 检查类所属包及 import 方向，严禁违背 DIP |
 | **markdownlint (0.23.3)** | 文档结构与行宽 | 标题/列表/表格空行、表格分隔行风格、围栏须标语言、正文行宽 ≤ 80 | `npx --yes markdownlint-cli2@0.23.3 --config .markdownlint.json "**/*.md"` 定位后手工修 |
 | **契约漂移** | 接口契约一致性 | `git status --porcelain contracts/` 必须为空 | `mvn clean verify -DskipTests=false -Dcontract.export=true` 后提交 `contracts/openapi.json` |
 
@@ -91,7 +112,21 @@ npx --yes markdownlint-cli2@0.23.3 --config .markdownlint.json "**/*.md"
 
 ---
 
-## 三、Git 提交与发布规范
+## 三、测试准入与断言纪律
+
+测试是回归网不是变更锁：断言的价值是「改坏核心逻辑时红」，不是「改任何东西都红」。
+
+- **准入**：只有核心逻辑（不变量、状态机、定价规则）、核心链路（用例编排、契约序列化）、
+  易错面（边界值、非法输入、并发、时间语义、失败路径与降级方向）才值得写用例。
+- **期望值只允许是契约或行为结果**：错误码、响应 payload 结构、业务结果与状态转移、
+  fail-closed 方向、非法输入被拒。
+- **禁止断言**：UI/错误提示文案、日志级别与措辞、DOM/组件内部结构、内部调用序列、
+  纯 getter/setter 往返。文案与日志微调不需要业务评审，不得被断言钉死。
+- **例外**：被测对象本身是日志/观测基础设施时，按组件行为测试。
+
+---
+
+## 四、Git 提交与发布规范
 
 - **提交信息必须中文**：所有 `git commit -m` 消息使用中文撰写，格式对齐 Conventional Commits：
   - `feat(order): 新增订单退款状态跃迁规则`

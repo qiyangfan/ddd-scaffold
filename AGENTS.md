@@ -35,11 +35,16 @@
    - 聚合构造器私有化，仅暴露 `create()` 工厂方法（业务创建）与 `restore()` 工厂方法（仅供仓储层从数据库重建聚合）。
    - 仓储层落库必须通过数据库 CAS 兜底（`UPDATE ... WHERE id=? AND status=?`），防范高并发丢失更新，
      冲突抛 `ORDER_CONCURRENT_MODIFY` 并回滚事务。
+   - 业务时间一律取注入 `Clock`：工厂/状态方法收 `Clock` 参数，`DomainConfig` 供生产时钟；
+     domain/application 禁止直呼墙钟，由 ArchUnit 规则
+     `businessTimeMustComeFromInjectedClock` 执法（唯一豁免 `Ids` 身份生成）。
 
 4. **端口与防腐隔离铁律**
    - 仓储接口（`domain/repository/`）面向聚合根，方法参数与返回值只能是聚合根或值对象，禁止泄露 DO。
    - 外部系统调用（如查商品信息）必须在 `domain/gateway/` 定义防腐端口接口，
      技术通信实现留在 `infrastructure/gateway/`，外部系统的 DTO/VO 严禁渗透进领域层。
+   - 网关事实判定必须区分「确认未命中」与「来源故障」：空响应/超时/5xx/非成功业务码翻译为第三方错误码，
+     不得伪装成「不存在」等确认事实；降级只允许发生在确认未命中，fail 方向默认 fail-closed。
 
 5. **多实例无状态与事件约束**
    - 进程保持无状态：禁止使用 JVM 内存保存分布式共享状态，禁止静态可变变量。
@@ -120,3 +125,9 @@
   - *解法*：直接执行 `mvn spotless:apply` 一键自动修复格式。
 - **坑 4**：Spring Boot 4 中 `starter-web` 已更名为 `starter-webmvc`，
   编写测试时使用 `spring-boot-starter-webmvc-test`。
+- **坑 5**：架构测试长成手写 `@Test` + `ClassFileImporter` 形态（如按域循环规则）时，
+  每条规则各做一次全量类导入。
+  - *后果*：重复字节码扫描随规则数组合爆炸（真实项目实测 60+ 次全量导入、架构测试 606s，
+    共享单次导入后 11.5s）。
+  - *解法*：全部规则共享一份不可变 `JavaClasses` 静态缓存。当前 `@AnalyzeClasses + @ArchTest`
+    形态默认 `cacheMode=FOREVER` 已共享导入，无需额外处理。

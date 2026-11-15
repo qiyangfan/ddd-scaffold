@@ -11,37 +11,36 @@
   "paths" : {
     "/api/v1/orders" : {
       "get" : {
-        "tags" : [ "订单管理" ],
-        "summary" : "分页查询订单",
         "operationId" : "page",
         "parameters" : [ {
-          "name" : "userId",
-          "in" : "query",
           "description" : "用户 ID，精确匹配",
+          "example" : 1000,
+          "in" : "query",
+          "name" : "userId",
           "required" : false,
           "schema" : {
             "type" : "integer",
             "format" : "int64",
             "description" : "用户 ID，精确匹配",
             "example" : 1000
-          },
-          "example" : 1000
+          }
         }, {
-          "name" : "status",
-          "in" : "query",
           "description" : "状态编码，不传则不过滤",
+          "example" : "UNPAID",
+          "in" : "query",
+          "name" : "status",
           "required" : false,
           "schema" : {
             "type" : "string",
             "description" : "状态编码，不传则不过滤",
             "enum" : [ "UNPAID", "PAID", "CANCELLED", "UNPAID", "PAID", "CANCELLED" ],
             "example" : "UNPAID"
-          },
-          "example" : "UNPAID"
+          }
         }, {
-          "name" : "pageNo",
-          "in" : "query",
           "description" : "页码，从 1 开始",
+          "example" : 1,
+          "in" : "query",
+          "name" : "pageNo",
           "required" : false,
           "schema" : {
             "type" : "integer",
@@ -50,12 +49,12 @@
             "example" : 1,
             "maximum" : 10000,
             "minimum" : 1
-          },
-          "example" : 1
+          }
         }, {
-          "name" : "pageSize",
-          "in" : "query",
           "description" : "每页条数，上限 200",
+          "example" : 10,
+          "in" : "query",
+          "name" : "pageSize",
           "required" : false,
           "schema" : {
             "type" : "integer",
@@ -64,45 +63,44 @@
             "example" : 10,
             "maximum" : 200,
             "minimum" : 1
-          },
-          "example" : 10
+          }
         } ],
         "responses" : {
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/RVoid"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/RVoid"
-                }
-              }
-            }
-          },
           "200" : {
-            "description" : "OK",
             "content" : {
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/RPageResultOrderResponse"
                 }
               }
-            }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RVoid"
+                }
+              }
+            },
+            "description" : "Bad Request"
+          },
+          "500" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RVoid"
+                }
+              }
+            },
+            "description" : "Internal Server Error"
           }
-        }
+        },
+        "summary" : "分页查询订单",
+        "tags" : [ "订单管理" ]
       },
       "post" : {
-        "tags" : [ "订单管理" ],
-        "summary" : "创建订单",
         "operationId" : "create",
         "requestBody" : {
           "content" : {
@@ -115,143 +113,47 @@
           "required" : true
         },
         "responses" : {
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/RVoid"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/RVoid"
-                }
-              }
-            }
-          },
           "200" : {
-            "description" : "OK",
             "content" : {
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ROrderResponse"
                 }
               }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/orders/{id}/pay" : {
-      "post" : {
-        "tags" : [ "订单管理" ],
-        "summary" : "支付订单",
-        "operationId" : "pay",
-        "parameters" : [ {
-          "name" : "id",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "format" : "uuid"
-          }
-        } ],
-        "responses" : {
+            },
+            "description" : "OK"
+          },
           "400" : {
-            "description" : "Bad Request",
             "content" : {
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/RVoid"
                 }
               }
-            }
+            },
+            "description" : "Bad Request"
           },
           "500" : {
-            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/RVoid"
                 }
               }
-            }
-          },
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ROrderResponse"
-                }
-              }
-            }
+            },
+            "description" : "Internal Server Error"
           }
-        }
-      }
-    },
-    "/api/v1/orders/{id}/cancel" : {
-      "post" : {
-        "tags" : [ "订单管理" ],
-        "summary" : "取消订单",
-        "operationId" : "cancel",
-        "parameters" : [ {
-          "name" : "id",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "format" : "uuid"
-          }
-        } ],
-        "responses" : {
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/RVoid"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/RVoid"
-                }
-              }
-            }
-          },
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ROrderResponse"
-                }
-              }
-            }
-          }
-        }
+        },
+        "summary" : "创建订单",
+        "tags" : [ "订单管理" ]
       }
     },
     "/api/v1/orders/{id}" : {
       "get" : {
-        "tags" : [ "订单管理" ],
-        "summary" : "订单详情",
         "operationId" : "get",
         "parameters" : [ {
-          "name" : "id",
           "in" : "path",
+          "name" : "id",
           "required" : true,
           "schema" : {
             "type" : "string",
@@ -259,71 +161,144 @@
           }
         } ],
         "responses" : {
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/RVoid"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/RVoid"
-                }
-              }
-            }
-          },
           "200" : {
-            "description" : "OK",
             "content" : {
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ROrderResponse"
                 }
               }
-            }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RVoid"
+                }
+              }
+            },
+            "description" : "Bad Request"
+          },
+          "500" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RVoid"
+                }
+              }
+            },
+            "description" : "Internal Server Error"
           }
-        }
+        },
+        "summary" : "订单详情",
+        "tags" : [ "订单管理" ]
+      }
+    },
+    "/api/v1/orders/{id}/cancel" : {
+      "post" : {
+        "operationId" : "cancel",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ROrderResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RVoid"
+                }
+              }
+            },
+            "description" : "Bad Request"
+          },
+          "500" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RVoid"
+                }
+              }
+            },
+            "description" : "Internal Server Error"
+          }
+        },
+        "summary" : "取消订单",
+        "tags" : [ "订单管理" ]
+      }
+    },
+    "/api/v1/orders/{id}/pay" : {
+      "post" : {
+        "operationId" : "pay",
+        "parameters" : [ {
+          "in" : "path",
+          "name" : "id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ROrderResponse"
+                }
+              }
+            },
+            "description" : "OK"
+          },
+          "400" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RVoid"
+                }
+              }
+            },
+            "description" : "Bad Request"
+          },
+          "500" : {
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RVoid"
+                }
+              }
+            },
+            "description" : "Internal Server Error"
+          }
+        },
+        "summary" : "支付订单",
+        "tags" : [ "订单管理" ]
       }
     }
   },
   "components" : {
     "schemas" : {
-      "RVoid" : {
-        "type" : "object",
-        "description" : "统一响应体",
-        "properties" : {
-          "code" : {
-            "type" : "string",
-            "description" : "响应码，0 表示成功",
-            "example" : "0"
-          },
-          "message" : {
-            "type" : "string",
-            "description" : "响应信息（英文）",
-            "example" : "success"
-          },
-          "data" : {
-            "description" : "业务数据"
-          }
-        }
-      },
       "OrderCreateRequest" : {
         "type" : "object",
         "description" : "创建订单入参",
         "properties" : {
-          "userId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "用户 ID",
-            "example" : 1000
-          },
           "items" : {
             "type" : "array",
             "description" : "订单明细",
@@ -338,6 +313,12 @@
             "example" : "deliver before Friday",
             "maxLength" : 255,
             "minLength" : 0
+          },
+          "userId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "用户 ID",
+            "example" : 1000
           }
         },
         "required" : [ "items", "userId" ]
@@ -367,6 +348,11 @@
         "type" : "object",
         "description" : "订单明细项",
         "properties" : {
+          "lineAmount" : {
+            "type" : "number",
+            "description" : "行小计",
+            "example" : 11998.0
+          },
           "productId" : {
             "type" : "integer",
             "format" : "int64",
@@ -378,21 +364,16 @@
             "description" : "商品名（下单时刻快照）",
             "example" : "Laptop Pro 14"
           },
-          "unitPrice" : {
-            "type" : "number",
-            "description" : "单价",
-            "example" : 5999.0
-          },
           "quantity" : {
             "type" : "integer",
             "format" : "int32",
             "description" : "数量",
             "example" : 2
           },
-          "lineAmount" : {
+          "unitPrice" : {
             "type" : "number",
-            "description" : "行小计",
-            "example" : 11998.0
+            "description" : "单价",
+            "example" : 5999.0
           }
         }
       },
@@ -400,21 +381,43 @@
         "type" : "object",
         "description" : "订单详情",
         "properties" : {
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "创建时间",
+            "example" : "2026-09-21 12:00:00"
+          },
+          "discountAmount" : {
+            "type" : "number",
+            "description" : "优惠金额",
+            "example" : 80.0
+          },
           "id" : {
             "type" : "string",
             "description" : "订单 ID：UUID v7 字符串",
             "example" : "019b1f2c-7a3e-7c4b-8f1d-2e6a9b0c1d2e"
+          },
+          "items" : {
+            "type" : "array",
+            "description" : "明细列表",
+            "items" : {
+              "$ref" : "#/components/schemas/OrderItemResponse"
+            }
           },
           "orderNo" : {
             "type" : "string",
             "description" : "订单号",
             "example" : "SO202609211200001234"
           },
-          "userId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "用户 ID",
-            "example" : 1000
+          "payAmount" : {
+            "type" : "number",
+            "description" : "应付金额",
+            "example" : 11918.0
+          },
+          "remark" : {
+            "type" : "string",
+            "description" : "备注",
+            "example" : "deliver before Friday"
           },
           "status" : {
             "type" : "string",
@@ -431,33 +434,26 @@
             "description" : "商品总额",
             "example" : 11998.0
           },
-          "discountAmount" : {
-            "type" : "number",
-            "description" : "优惠金额",
-            "example" : 80.0
-          },
-          "payAmount" : {
-            "type" : "number",
-            "description" : "应付金额",
-            "example" : 11918.0
-          },
-          "remark" : {
-            "type" : "string",
-            "description" : "备注",
-            "example" : "deliver before Friday"
-          },
-          "items" : {
+          "userId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "用户 ID",
+            "example" : 1000
+          }
+        }
+      },
+      "PageResultOrderResponse" : {
+        "type" : "object",
+        "properties" : {
+          "list" : {
             "type" : "array",
-            "description" : "明细列表",
             "items" : {
-              "$ref" : "#/components/schemas/OrderItemResponse"
+              "$ref" : "#/components/schemas/OrderResponse"
             }
           },
-          "createdAt" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "创建时间",
-            "example" : "2026-09-21 12:00:00"
+          "total" : {
+            "type" : "integer",
+            "format" : "int64"
           }
         }
       },
@@ -470,29 +466,14 @@
             "description" : "响应码，0 表示成功",
             "example" : "0"
           },
+          "data" : {
+            "$ref" : "#/components/schemas/OrderResponse",
+            "description" : "业务数据"
+          },
           "message" : {
             "type" : "string",
             "description" : "响应信息（英文）",
             "example" : "success"
-          },
-          "data" : {
-            "$ref" : "#/components/schemas/OrderResponse",
-            "description" : "业务数据"
-          }
-        }
-      },
-      "PageResultOrderResponse" : {
-        "type" : "object",
-        "properties" : {
-          "total" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "list" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/OrderResponse"
-            }
           }
         }
       },
@@ -505,14 +486,33 @@
             "description" : "响应码，0 表示成功",
             "example" : "0"
           },
+          "data" : {
+            "$ref" : "#/components/schemas/PageResultOrderResponse",
+            "description" : "业务数据"
+          },
           "message" : {
             "type" : "string",
             "description" : "响应信息（英文）",
             "example" : "success"
+          }
+        }
+      },
+      "RVoid" : {
+        "type" : "object",
+        "description" : "统一响应体",
+        "properties" : {
+          "code" : {
+            "type" : "string",
+            "description" : "响应码，0 表示成功",
+            "example" : "0"
           },
           "data" : {
-            "$ref" : "#/components/schemas/PageResultOrderResponse",
             "description" : "业务数据"
+          },
+          "message" : {
+            "type" : "string",
+            "description" : "响应信息（英文）",
+            "example" : "success"
           }
         }
       }
