@@ -61,6 +61,8 @@
      `mvn clean verify -DskipTests=false`）。
    - **Spotless** 格式化检查、**PMD** 静态分析（0 violation）、**SpotBugs** 字节码缺陷扫描（0 bug）、
      **JaCoCo** 覆盖率门禁（Instruction ≥ 70%, Branch ≥ 50%）、**ArchUnit** 架构守护必须全部通过。
+   - 安全与供应链门禁（gitleaks、osv-scanner、CodeQL、SBOM+许可证、迁移不可变）
+     的本地命令与负向验收见 `GATES.md`；`security.yml` 与 `codeql.yml` 在 CI 兜底。
 
 ---
 
